@@ -19,6 +19,7 @@ pub enum BackendType {
     Cargo,
     Conda,
     Core,
+    Distrobox,
     Dotnet,
     Forgejo,
     Gem,
@@ -67,6 +68,7 @@ impl BackendType {
             "cargo" => BackendType::Cargo,
             "conda" => BackendType::Conda,
             "core" => BackendType::Core,
+            "distrobox" => BackendType::Distrobox,
             "dotnet" => BackendType::Dotnet,
             "forgejo" => BackendType::Forgejo,
             "gem" => BackendType::Gem,
@@ -88,8 +90,9 @@ impl BackendType {
 
     /// Returns true if this backend is still gated behind experimental mode.
     pub fn is_experimental(&self) -> bool {
-        use super::{dotnet, packslip, s3, spinel, spm};
+        use super::{distrobox, dotnet, packslip, s3, spinel, spm};
         match self {
+            BackendType::Distrobox => distrobox::EXPERIMENTAL,
             BackendType::Dotnet => dotnet::EXPERIMENTAL,
             BackendType::Packslip => packslip::EXPERIMENTAL,
             BackendType::S3 => s3::EXPERIMENTAL,

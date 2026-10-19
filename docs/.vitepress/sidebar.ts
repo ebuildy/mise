@@ -42,6 +42,7 @@ export const sidebar: SidebarItem[] = [
           { text: "asdf (legacy)", link: "/dev-tools/backends/asdf" },
           { text: "cargo", link: "/dev-tools/backends/cargo" },
           { text: "conda", link: "/dev-tools/backends/conda" },
+          { text: "distrobox (experimental)", link: "/dev-tools/backends/distrobox" },
           { text: "dotnet", link: "/dev-tools/backends/dotnet" },
           { text: "forgejo", link: "/dev-tools/backends/forgejo" },
           { text: "gem", link: "/dev-tools/backends/gem" },

@@ -66,6 +66,7 @@ pub mod aube_host;
 pub mod backend_type;
 pub(crate) mod cargo;
 pub(crate) mod conda;
+pub(crate) mod distrobox;
 pub(crate) mod dotnet;
 mod external_plugin_cache;
 pub(crate) mod gem;
@@ -853,6 +854,7 @@ pub fn arg_to_backend(ba: BackendArg) -> Option<ABackend> {
         BackendType::Asdf => Some(Arc::new(asdf::AsdfBackend::from_arg(ba))),
         BackendType::Cargo => Some(Arc::new(cargo::CargoBackend::from_arg(ba))),
         BackendType::Conda => Some(Arc::new(conda::CondaBackend::from_arg(ba))),
+        BackendType::Distrobox => Some(Arc::new(distrobox::DistroboxBackend::from_arg(ba))),
         BackendType::Dotnet => Some(Arc::new(dotnet::DotnetBackend::from_arg(ba))),
         BackendType::Forgejo => Some(Arc::new(github::UnifiedGitBackend::from_arg(ba))),
         BackendType::Gem => Some(Arc::new(gem::GemBackend::from_arg(ba))),
@@ -896,6 +898,7 @@ pub(crate) fn install_time_option_keys_for_type(backend_type: &BackendType) -> V
         BackendType::Pipx => pipx::install_time_option_keys(),
         BackendType::Aqua => aqua::install_time_option_keys(),
         BackendType::Spinel => spinel::install_time_option_keys(),
+        BackendType::Distrobox => distrobox::install_time_option_keys(),
         BackendType::Spm => spm::install_time_option_keys(),
         _ => vec![],
     }
