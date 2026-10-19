@@ -4731,6 +4731,39 @@
         }
       ]
     },
+    "tool_distrobox_options": {
+      "type": "object",
+      "properties": {
+        "packages": {
+          "description": "space-separated packages to install in the container when it is created",
+          "type": "string"
+        },
+        "distrobox": {
+          "description": "distrobox executable to run (default: distrobox on PATH)",
+          "type": "string"
+        }
+      }
+    },
+    "tool_distrobox": {
+      "description": "a tool exported from a distrobox container",
+      "oneOf": [
+        {
+          "description": "image tag to create the container from",
+          "type": "string"
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/tool"
+            },
+            {
+              "$ref": "#/$defs/tool_distrobox_options"
+            }
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "tool_spinel_options": {
       "type": "object",
       "properties": {
@@ -5566,6 +5599,9 @@
             },
             "^spinel:": {
               "$ref": "#/$defs/tool_spinel"
+            },
+            "^distrobox:": {
+              "$ref": "#/$defs/tool_distrobox"
             },
             "^(core:)?python(\\[.*\\])?$": {
               "$ref": "#/$defs/tool_core_python"
@@ -9264,6 +9300,19 @@
             },
             {
               "$ref": "#/$defs/tool_spinel"
+            }
+          ]
+        },
+        "^distrobox:": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/tool_distrobox"
+              }
+            },
+            {
+              "$ref": "#/$defs/tool_distrobox"
             }
           ]
         },

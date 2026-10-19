@@ -1085,6 +1085,71 @@ pub async fn pull_artifact(reference: &str, dest: &Path) -> Result<()> {
     Ok(())
 }
 
+#[derive(Debug, Deserialize)]
+struct TagList {
+    #[serde(default)]
+    tags: Option<Vec<String>>,
+}
+
+/// List the tags of the repository named by `reference` (its tag, if any, is
+/// ignored), following `Link: <…>; rel="next"` pagination.
+///
+/// Tags come back in registry order; they are opaque strings, not versions.
+pub async fn list_tags(reference: &str) -> Result<Vec<String>> {
+    let r = Reference::parse(reference)?;
+    let base_url = r.registry_url();
+    let mut session = AuthSession::new(r.clone(), "pull").await?;
+    let mut url = format!("{base_url}/v2/{}/tags/list?n=1000", r.repository);
+    let mut tags = Vec::new();
+    // A misbehaving registry could hand back a `next` link forever.
+    for _ in 0..1000 {
+        let resp = session
+            .send(|auth| {
+                let mut rb = HTTP.reqwest()?.get(&url);
+                if let Some(a) = auth {
+                    rb = rb.header("Authorization", a);
+                }
+                Ok(rb)
+            })
+            .await
+            .wrap_err_with(|| format!("fetching {url}"))?;
+        match resp.status() {
+            s if s.is_success() => {}
+            // Docker Hub answers 401 for a repository that does not exist.
+            StatusCode::UNAUTHORIZED | StatusCode::FORBIDDEN | StatusCode::NOT_FOUND => bail!(
+                "{}/{} was not found, or its registry needs credentials (docker login)",
+                r.registry,
+                r.repository
+            ),
+            s => bail!("listing tags at {url} failed: {}", s.as_u16()),
+        }
+        let next = next_link(&header_str(&resp, "link"));
+        let page: TagList = resp.json().await?;
+        tags.extend(page.tags.unwrap_or_default());
+        match next {
+            Some(next) if next.starts_with("http://") || next.starts_with("https://") => {
+                url = next;
+            }
+            Some(next) => url = format!("{base_url}{next}"),
+            None => return Ok(tags),
+        }
+    }
+    bail!("too many pages listing tags of {reference}")
+}
+
+/// The target of the `rel="next"` entry of an RFC 8288 `Link` header.
+fn next_link(link: &str) -> Option<String> {
+    link.split(',').find_map(|entry| {
+        let (target, params) = entry.split_once(';')?;
+        let is_next = params.split(';').any(|p| {
+            let p = p.trim().to_ascii_lowercase();
+            p == "rel=\"next\"" || p == "rel=next"
+        });
+        let target = target.trim().strip_prefix('<')?.strip_suffix('>')?;
+        is_next.then(|| target.to_string())
+    })
+}
+
 /// A remote image's manifest and config, including `rootfs.diff_ids`
 /// (index-aligned with `manifest.layers`). Used as the layer-reuse cache for
 /// `mise oci push`.
@@ -2073,6 +2138,20 @@ fn push_auth_hint(status: StatusCode, had_credential: bool) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn next_link_reads_the_rel_next_target() {
+        assert_eq!(
+            next_link(r#"</v2/library/alpine/tags/list?last=3.20&n=1000>; rel="next""#).as_deref(),
+            Some("/v2/library/alpine/tags/list?last=3.20&n=1000")
+        );
+        assert_eq!(
+            next_link(r#"<https://a/prev>; rel="prev", <https://a/next>; rel="next""#).as_deref(),
+            Some("https://a/next")
+        );
+        assert_eq!(next_link(""), None);
+        assert_eq!(next_link(r#"<https://a/prev>; rel="prev""#), None);
+    }
 
     async fn read_upload_request(
         socket: tokio::net::TcpStream,

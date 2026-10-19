@@ -2102,7 +2102,7 @@ minimum_release_age = "7d"
 
 The `24h` default applies to aqua, cargo, core, forgejo, gem, github, gitlab,
 go, npm, packslip, pypi, spm and ubi tools. Tools from asdf, vfox (including
-vfox plugin backends), conda, dotnet, http, s3 and spinel get no default
+vfox plugin backends), conda, distrobox, dotnet, http, s3 and spinel get no default
 cutoff. A value you set applies to every backend, except for tools in
 [`minimum_release_age_excludes`](#minimum_release_age_excludes).
 

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# The distrobox backend is experimental: with experimental off, a config that
+# names a distrobox tool still loads, and installing it fails before any
+# container is created.
+
+export MISE_EXPERIMENTAL=0
+
+cat <<'TOML' >mise.toml
+[tools]
+"distrobox:docker.io/library/alpine:jq" = "3.20"
+TOML
+
+assert_succeed "mise ls"
+# Offline skips the tag listing, so the install reaches the backend.
+assert_fail_contains "MISE_OFFLINE=1 mise install" "the distrobox backend is experimental"
+
+# The tool name needs the bins to export.
+export MISE_EXPERIMENTAL=1
+assert_fail_contains "MISE_OFFLINE=1 mise install distrobox:docker.io/library/alpine@3.20" "expected distrobox:IMAGE:bin1,bin2"
+
+# Other hosts are rejected once the tool name is valid.
+if [[ "$(uname -s)" != "Linux" ]]; then
+  assert_fail_contains "MISE_OFFLINE=1 mise install distrobox:docker.io/library/alpine:jq@3.20" "only supports Linux"
+fi

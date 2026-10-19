@@ -74,6 +74,10 @@ impl BackendProvider for MiseBackendProvider {
                 BackendType::Asdf => ("asdf", Some("Install tools via asdf plugins")),
                 BackendType::Cargo => ("cargo", Some("Install Rust packages from crates.io")),
                 BackendType::Conda => ("conda", Some("Install packages from conda-forge")),
+                BackendType::Distrobox => (
+                    "distrobox",
+                    Some("Export commands from a distrobox container"),
+                ),
                 BackendType::Dotnet => ("dotnet", Some("Install .NET tools")),
                 BackendType::Forgejo => ("forgejo", Some("Install from Forgejo releases")),
                 BackendType::Gem => ("gem", Some("Install Ruby gems")),

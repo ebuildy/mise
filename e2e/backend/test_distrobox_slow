@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Creates a real distrobox container and exports commands from it.
+if [[ "$(uname -s)" != "Linux" ]] || ! command -v distrobox >/dev/null; then
+  echo "skipping: needs Linux and distrobox"
+  exit 0
+fi
+
+export MISE_EXPERIMENTAL=1
+
+assert_contains "mise ls-remote distrobox:docker.io/library/alpine:jq" "3.20"
+
+# One bin by name, looked up on the container's PATH, and one by path.
+assert_succeed "mise use distrobox:docker.io/library/alpine:apk,/bin/busybox@3.20"
+assert_contains "mise x -- apk --version" "apk-tools"
+assert_contains "mise x -- busybox cat /etc/alpine-release" "3.20"
+
+assert_succeed "mise uninstall distrobox:docker.io/library/alpine:apk,/bin/busybox@3.20"
+assert_not_contains "distrobox list --no-color" "mise-alpine-3-20-"
